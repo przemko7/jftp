@@ -1,6 +1,18 @@
 JFTP - The Universal FTP Client
 ===============================
 
+Build and test
+--------------
+
+The project targets Java 17 or newer. Run `mvn test` from the repository root;
+the CI workflow tests Java 17 and 21. The first run requires access to the
+declared Maven repositories because the legacy `ftpapi` dependency is not
+bundled in this repository.
+
+On first startup after upgrading, preferences and favorites are migrated from
+the legacy serialized files into authenticated encrypted files under
+`~/.jftp/data`. The old files are retained as a rollback copy.
+
 Introduction
 ------------
 

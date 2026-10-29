@@ -1,0 +1,27 @@
+# Maven
+target/
+
+# IDE metadata
+.settings/
+.classpath
+.project
+*.iml
+
+# Runtime data and local credentials
+.jftp/
+*.ser
+*.jks
+*.key
+
+# Local tooling and browser profiles
+node_modules/
+.npm-cache/
+.playwright/
+.playwright-cli/
+.chrome-*/
+.localappdata/
+tmp-*.js
+
+# Temporary browser harness manifests
+package.json
+package-lock.json

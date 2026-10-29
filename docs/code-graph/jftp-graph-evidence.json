@@ -1,0 +1,70 @@
+{
+  "revision": "14e62ceba4e371c2a0b955604b10f065f46f4f7d",
+  "working_copy": "dirty",
+  "claim": "JFTP architecture and modernization graph edges are grounded in the listed source definitions and callers.",
+  "citations": [
+    {
+      "path": "src/main/java/com/myjavaworld/jftp/JFTPApplication.java",
+      "sha256": "a917c338b788b34890fdf8747e35862ff5abf3ca62aa3230fefa23c6c1d13e0a",
+      "start_line": 65,
+      "end_line": 67,
+      "quote": "\tpublic static void main(String args[]) {\n\t\tnew JFTPApplication();\n\t}"
+    },
+    {
+      "path": "src/main/java/com/myjavaworld/jftp/JFTP.java",
+      "sha256": "c418b4f449a2971d5d1b853f19c49ddb9f0f3951e66a2e927a60dbd69d952c45",
+      "start_line": 100,
+      "end_line": 112,
+      "quote": "\t\ttry {\n\t\t\tprefs = loadPreferences();\n\t\t\ttransferTypes = prefs.getTransferTypes();\n\t\t\tJFTPUtil.updateProxySettings();\n\t\t} catch (IOException exp) {\n\t\t\tSystem.err\n\t\t\t\t\t.println(\"Failed to load the preferences. Using Defaults. \");\n\t\t\tprefs = new JFTPPreferences();\n\t\t\ttransferTypes = prefs.getTransferTypes();\n\t\t\ttry {\n\t\t\t\tPreferencesStore.save(DATA_HOME, prefs);\n\t\t\t} catch (IOException ignored) {\n\t\t\t}"
+    },
+    {
+      "path": "src/main/java/com/myjavaworld/jftp/FTPSession.java",
+      "sha256": "f7a0f4757bbd1212cf114c85aa0c5bcf94ed7d672ecc3b816e9d194d98b0360a",
+      "start_line": 617,
+      "end_line": 637,
+      "quote": "\t\tnew SwingWorker() {\n\n\t\t\tRemoteFile[] data = null;\n\n\t\t\t@Override\n\t\t\tpublic Object construct() {\n\t\t\t\ttry {\n\t\t\t\t\tclient = (FTPClient) Class.forName(\n\t\t\t\t\t\t\tremoteHost.getFTPClientClassName()).newInstance();\n\t\t\t\t\tlistParser = (ListParser) Class.forName(\n\t\t\t\t\t\t\tremoteHost.getListParserClassName()).newInstance();\n\t\t\t\t\tclient.setListParser(listParser);\n\t\t\t\t\tclient.setPassive(remoteHost.isPassive());\n\t\t\t\t\tclient.setTimeout(JFTP.prefs.getTimeout());\n\t\t\t\t\tclient.setBufferSize(JFTP.prefs.getBufferSize());\n\t\t\t\t\tclient.setSSLUsage(remoteHost.getSSLUsage());\n\t\t\t\t\tclient.setDataChannelUnencrypted(remoteHost\n\t\t\t\t\t\t\t.isDataChannelUnencrypted());\n\t\t\t\t\tif (remoteHost.getSSLUsage() != FTPConstants.USE_NO_SSL) {\n\t\t\t\t\t\tclient.setSSLContext(JFTPSSLContext.getSSLContext(jftp,\n\t\t\t\t\t\t\t\tremoteHost.getHostName()));"
+    },
+    {
+      "path": "src/main/java/com/myjavaworld/jftp/PreferencesStore.java",
+      "sha256": "616c7fdbd7f39fd648ecadbf277ea88fac7af640d6040f22e254d49f08881229",
+      "start_line": 20,
+      "end_line": 54,
+      "quote": "\n\tprivate PreferencesStore() {\n\t}\n\n\tstatic JFTPPreferences load(File dataHome) throws IOException {\n\t\tFile file = new File(dataHome, \"preferences.dat\");\n\t\tif (!file.exists() || file.length() == 0) {\n\t\t\treturn new JFTPPreferences();\n\t\t}\n\t\tProperties p = EncryptedPropertiesStore.load(file,\n\t\t\t\tEncryptedPropertiesStore.loadOrCreateKey(dataHome));\n\t\tJFTPPreferences prefs = new JFTPPreferences();\n\t\tprefs.setLocale(Locale.forLanguageTag(p.getProperty(\"locale\",\n\t\t\t\tprefs.getLocale().toLanguageTag())));\n\t\tprefs.setLookAndFeelClassName(p.getProperty(\"laf\",\n\t\t\t\tprefs.getLookAndFeelClassName()));\n\t\tprefs.setTheme(p.getProperty(\"theme\", prefs.getTheme()));\n\t\tprefs.setLocalDirectory(p.getProperty(\"localDirectory\",\n\t\t\t\tprefs.getLocalDirectory()));\n\t\tprefs.setEmail(p.getProperty(\"email\", prefs.getEmail()));\n\t\tprefs.setClient(p.getProperty(\"client\", prefs.getClient()));\n\t\tprefs.setListParser(p.getProperty(\"listParser\", prefs.getListParser()));\n\t\tprefs.setTimeout(integer(p, \"timeout\", prefs.getTimeout()));\n\t\tprefs.setBufferSize(integer(p, \"bufferSize\", prefs.getBufferSize()));\n\t\tprefs.setDateFormat(integer(p, \"dateFormat\", prefs.getDateFormat()));\n\t\tprefs.setTimeFormat(integer(p, \"timeFormat\", prefs.getTimeFormat()));\n\t\tprefs.setDefaultTransferType(integer(p, \"defaultTransferType\",\n\t\t\t\tprefs.getDefaultTransferType()));\n\t\tprefs.setPassive(bool(p, \"passive\", prefs.isPassive()));\n\t\tprefs.setUseJavaWindows(bool(p, \"useJavaWindows\", prefs.getUseJavaWindows()));\n\t\tprefs.setToolBarType(integer(p, \"toolBarType\", prefs.getToolBarType()));\n\t\tprefs.setServerCertificateStore(p.getProperty(\"serverCertificateStore\",\n\t\t\t\tprefs.getServerCertificateStore()));\n\t\tprefs.setClientCertificateStore(p.getProperty(\"clientCertificateStore\",\n\t\t\t\tprefs.getClientCertificateStore()));"
+    },
+    {
+      "path": "src/main/java/com/myjavaworld/jftp/FavoritesManager.java",
+      "sha256": "a0f87f5653e8f7a5fa4175389714eb4ff798eebe82e55476050fbcce9d51b23c",
+      "start_line": 32,
+      "end_line": 62,
+      "quote": "\n\tprivate FavoritesManager() {\n\t}\n\n\tpublic static List getFavorites() throws IOException,\n\t\t\tClassNotFoundException, IllegalBlockSizeException,\n\t\t\tBadPaddingException {\n\t\tcheckDataHome();\n\t\tif (FAV_FILE.exists() && FAV_FILE.length() > 0) {\n\t\t\treturn readProperties();\n\t\t}\n\t\tif (LEGACY_FAV_FILE.exists() && LEGACY_FAV_FILE.length() > 0) {\n\t\t\tList favorites = readLegacyFavorites();\n\t\t\tsaveFavorites(favorites);\n\t\t\treturn favorites;\n\t\t}\n\t\treturn new ArrayList();\n\t}\n\n\tpublic static void saveFavorites(List favorites) throws IOException,\n\t\t\tIllegalBlockSizeException {\n\t\tcheckDataHome();\n\t\tProperties properties = new Properties();\n\t\tproperties.setProperty(\"format\", \"1\");\n\t\tint index = 0;\n\t\tif (favorites != null) {\n\t\t\tfor (Object value : favorites) {\n\t\t\t\tif (value instanceof RemoteHost) {\n\t\t\t\t\twriteFavorite(properties, index++, (RemoteHost) value);\n\t\t\t\t}\n\t\t\t}"
+    },
+    {
+      "path": "src/main/java/com/myjavaworld/util/EncryptedPropertiesStore.java",
+      "sha256": "1b77a112ead77eafe04a4e8c0f12df3608abb3dd580968cbdec9b47d63c7fcdf",
+      "start_line": 24,
+      "end_line": 58,
+      "quote": "public final class EncryptedPropertiesStore {\n\n\tprivate static final byte[] MAGIC = { 'J', 'F', 'T', 'P', 1 };\n\tprivate static final int KEY_SIZE = 32;\n\tprivate static final int NONCE_SIZE = 12;\n\n\tprivate EncryptedPropertiesStore() {\n\t}\n\n\tpublic static SecretKeySpec loadOrCreateKey(File dataHome)\n\t\t\tthrows IOException {\n\t\tif (!dataHome.exists() && !dataHome.mkdirs() && !dataHome.isDirectory()) {\n\t\t\tthrow new IOException(\"Unable to create data directory: \" + dataHome);\n\t\t}\n\t\tFile keyFile = new File(dataHome, \"secrets.key\");\n\t\tif (keyFile.exists()) {\n\t\t\tbyte[] key = Files.readAllBytes(keyFile.toPath());\n\t\t\tif (key.length != KEY_SIZE) {\n\t\t\t\tthrow new IOException(\"Invalid JFTP secret key length\");\n\t\t\t}\n\t\t\treturn new SecretKeySpec(key, \"AES\");\n\t\t}\n\t\tbyte[] key = new byte[KEY_SIZE];\n\t\tnew SecureRandom().nextBytes(key);\n\t\tPath temp = new File(dataHome, \"secrets.key.tmp\").toPath();\n\t\tFiles.write(temp, key);\n\t\ttry {\n\t\t\tFiles.move(temp, keyFile.toPath(), StandardCopyOption.ATOMIC_MOVE);\n\t\t} catch (java.nio.file.AtomicMoveNotSupportedException exp) {\n\t\t\tFiles.move(temp, keyFile.toPath(), StandardCopyOption.REPLACE_EXISTING);\n\t\t}\n\t\tkeyFile.setReadable(false, false);\n\t\tkeyFile.setWritable(false, false);\n\t\tkeyFile.setReadable(true, true);\n\t\tkeyFile.setWritable(true, true);"
+    },
+    {
+      "path": "src/main/java/com/myjavaworld/zip/Unzip.java",
+      "sha256": "31010747818a5a1cda8a29db97dde44ca4dd05e60da1e85a3dff021facd7d6b8",
+      "start_line": 134,
+      "end_line": 180,
+      "quote": "\t\t\tzipFile.close();\n\t\t} finally {\n\t\t\tzipFile = null;\n\t\t}\n\t}\n\n\tpublic void unzip() throws IOException {\n\t\tif (zipFile == null) {\n\t\t\tthrow new IllegalStateException(\"ZipFile is not open\");\n\t\t}\n\t\tEnumeration entries = zipFile.entries();\n\t\twhile (entries.hasMoreElements()) {\n\t\t\tZipEntry entry = (ZipEntry) entries.nextElement();\n\t\t\tPath target = secureTarget(entry);\n\t\t\tif (entry.isDirectory()) {\n\t\t\t\tFiles.createDirectories(target);\n\t\t\t\tif (entry.getTime() >= 0) {\n\t\t\t\t\tFiles.setLastModifiedTime(target,\n\t\t\t\t\t\t\tjava.nio.file.attribute.FileTime.fromMillis(entry.getTime()));\n\t\t\t\t}\n\t\t\t} else {\n\t\t\t\tunzipFile(entry, target);\n\t\t\t}\n\t\t}\n\t}\n\n\tprivate Path secureTarget(ZipEntry entry) throws IOException {\n\t\tPath root = targetDirectory.toPath().toRealPath();\n\t\tPath target = root.resolve(entry.getName()).normalize();\n\t\tif (!target.startsWith(root)) {\n\t\t\tthrow new IOException(\"ZIP entry escapes extraction directory: \"\n\t\t\t\t\t+ entry.getName());\n\t\t}\n\t\tPath parent = target.getParent();\n\t\tif (parent != null) {\n\t\t\tPath current = root;\n\t\t\tfor (Path component : root.relativize(parent)) {\n\t\t\t\tcurrent = current.resolve(component);\n\t\t\t\tif (Files.isSymbolicLink(current)) {\n\t\t\t\t\tthrow new IOException(\"ZIP entry traverses symbolic link: \"\n\t\t\t\t\t\t\t+ entry.getName());\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\tif (Files.isSymbolicLink(target)) {\n\t\t\tthrow new IOException(\"ZIP entry targets symbolic link: \"\n\t\t\t\t\t+ entry.getName());"
+    },
+    {
+      "path": "src/main/java/com/myjavaworld/jftp/ssl/JFTPTrustManager.java",
+      "sha256": "0d55495cee07c4936258f1b550ffe4ff23d012d292d9ca6865c759ba6082354d",
+      "start_line": 76,
+      "end_line": 110,
+      "quote": "\t\ttm.checkClientTrusted(chain, authType);\n\t}\n\n\tpublic void checkServerTrusted(X509Certificate[] chain, String authType)\n\t\t\tthrows CertificateException {\n\t\tif (chain == null || chain.length == 0) {\n\t\t\tthrow new CertificateException(\"The server returned an empty certificate chain\");\n\t\t}\n\n\t\tif (this.chain != null) {\n\t\t\tif (Arrays.equals(chain, this.chain)) {\n\t\t\t\treturn;\n\t\t\t}\n\t\t}\n\n\t\tboolean validDate = isValidDate(chain);\n\t\tboolean validHost = isValidHost(chain);\n\t\tboolean trusted = isTrusted(chain);\n\t\ttry {\n\t\t\ttm.checkServerTrusted(chain, authType);\n\t\t\ttrusted = true;\n\t\t} catch (CertificateException exp) {\n\t\t\t// The certificate manager may allow an explicit user decision below.\n\t\t}\n\n\t\tif (!validDate || !validHost || !trusted) {\n\t\t\tint userOption = SecurityWarningDlg.showDialog(jftp, chain,\n\t\t\t\t\tvalidDate, validHost, trusted);\n\t\t\tif (userOption != SecurityWarningDlg.YES_OPTION) {\n\t\t\t\tthrow new CertificateException(\"No trusted certificate found. \");\n\t\t\t}\n\t\t\tthis.chain = chain;\n\t\t} else {\n\t\t\tthis.chain = chain;\n\t\t}"
+    },
+    {
+      "path": "src/main/java/com/myjavaworld/jftp/AutoUpdater.java",
+      "sha256": "ede616bf073243e156ff1e7c96deffc4b72a45833eb3418041994f44efc3f5ba",
+      "start_line": 31,
+      "end_line": 72,
+      "quote": "import com.myjavaworld.gui.GUIUtil;\nimport com.myjavaworld.util.ResourceLoader;\n\n/**\n * @author Sai Pullabhotla, psai [at] jMethods [dot] com\n * @version 1.0\n */\npublic class AutoUpdater extends Thread {\n\n\tprivate static final String KEY_LATEST_VERSION = \"latestVersion\";\n\tprivate static final String KEY_INFO_URL = \"infoURL\";\n\tprivate static final String CHECK_URL = \"https://www.jMethods.com/software/jftp/update.properties\";\n\tprivate static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(10);\n\tprivate Component parent = null;\n\tprivate boolean delay = false;\n\tprivate boolean showNoUpdatesMessage = false;\n\n\tpublic AutoUpdater(Component parent, boolean delay,\n\t\t\tboolean ignoreIfNoUpdates) {\n\t\tsuper(\"Auto Updater Thread\");\n\t\tsetDaemon(true);\n\t\tthis.parent = parent;\n\t\tthis.delay = delay;\n\t\tthis.showNoUpdatesMessage = ignoreIfNoUpdates;\n\t}\n\n\t@Override\n\tpublic void run() {\n\t\tif (delay) {\n\t\t\ttry {\n\t\t\t\tThread.sleep(15000);\n\t\t\t} catch (InterruptedException exp) {\n\t\t\t\tThread.currentThread().interrupt();\n\t\t\t\treturn;\n\t\t\t}\n\t\t}\n\t\tfor (int attempt = 0; attempt < 3 && !isInterrupted(); attempt++) {\n\t\t\ttry {\n\t\t\t\tURI uri = URI.create(CHECK_URL);\n\t\t\t\tif (!\"https\".equalsIgnoreCase(uri.getScheme())) {\n\t\t\t\t\tthrow new IllegalStateException(\"Update endpoint must use HTTPS\");\n\t\t\t\t}"
+    }
+  ]
+}

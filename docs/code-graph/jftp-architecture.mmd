@@ -1,0 +1,27 @@
+flowchart LR
+    App["JFTPApplication\nmain()"] --> Shell["JFTP\nwindow, tabs, lifecycle"]
+    Shell --> Session["FTPSession\nconnection and transfer coordinator"]
+    Shell --> Prefs["PreferencesStore\nencrypted settings"]
+    Shell --> Fav["FavoritesManager\nencrypted favorites"]
+    Prefs --> Store["EncryptedPropertiesStore\nAES-GCM envelope"]
+    Fav --> Store
+    Shell --> Update["AutoUpdater\nHTTPS metadata"]
+    Session --> Worker["SwingWorker\nbackground operations"]
+    Session --> Local["LocalPane"]
+    Session --> Remote["RemotePane"]
+    Session -. reflective client/parser .-> FTP["ftpapi\nexternal dependency"]
+    Session --> SSL["JFTPSSLContext\nTLS context"]
+    SSL --> Trust["JFTPTrustManager\nSAN and trust checks"]
+    Trust --> Keys["KeyStoreManager\ncertificate stores"]
+    Session --> Zip["Zip / Unzip\narchive operations"]
+
+    classDef entry fill:#dbeafe,stroke:#1d4ed8,color:#111827;
+    classDef ui fill:#dcfce7,stroke:#15803d,color:#111827;
+    classDef service fill:#fef3c7,stroke:#b45309,color:#111827;
+    classDef security fill:#fee2e2,stroke:#b91c1c,color:#111827;
+    classDef external fill:#e5e7eb,stroke:#4b5563,color:#111827;
+    class App entry;
+    class Shell,Session,Local,Remote,Worker ui;
+    class Prefs,Fav,Store,Update,Zip service;
+    class SSL,Trust,Keys security;
+    class FTP external;
