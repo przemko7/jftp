@@ -37,7 +37,7 @@ public class JFTPSSLContext {
 	public static SSLContext getSSLContext(JFTP jftp, String hostName)
 			throws KeyManagementException, KeyStoreException,
 			NoSuchAlgorithmException, UnrecoverableKeyException {
-		SSLContext ctx = SSLContext.getInstance("SSL");
+		SSLContext ctx = SSLContext.getInstance("TLS");
 		ctx.init(new KeyManager[] { new JFTPKeyManager() },
 				new TrustManager[] { new JFTPTrustManager(jftp, hostName) },
 				null);

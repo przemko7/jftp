@@ -26,10 +26,8 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
@@ -106,6 +104,12 @@ public class JFTP extends MFrame implements WindowListener, ActionListener,
 		} catch (IOException exp) {
 			System.err
 					.println("Failed to load the preferences. Using Defaults. ");
+			prefs = new JFTPPreferences();
+			transferTypes = prefs.getTransferTypes();
+			try {
+				PreferencesStore.save(DATA_HOME, prefs);
+			} catch (IOException ignored) {
+			}
 		}
 	}
 	private JFTPToolBar toolBar = null;
@@ -511,17 +515,8 @@ public class JFTP extends MFrame implements WindowListener, ActionListener,
 	 */
 	public static synchronized void savePreferences(JFTPPreferences prefs)
 			throws IOException {
-		ObjectOutputStream out = null;
-		try {
-			File prefsFile = new File(DATA_HOME, "preferences.ser");
-			out = new ObjectOutputStream(new FileOutputStream(prefsFile));
-			out.writeObject(prefs);
-			transferTypes = prefs.getTransferTypes();
-		} finally {
-			if (out != null) {
-				out.close();
-			}
-		}
+		PreferencesStore.save(DATA_HOME, prefs);
+		transferTypes = prefs.getTransferTypes();
 	}
 
 	/**
@@ -534,37 +529,33 @@ public class JFTP extends MFrame implements WindowListener, ActionListener,
 	 */
 	public static synchronized JFTPPreferences loadPreferences()
 			throws IOException {
-		FileInputStream fin = null;
-		ObjectInputStream in = null;
 		JFTPPreferences prefs = new JFTPPreferences();
-
-		try {
-			if (!DATA_HOME.exists()) {
-				DATA_HOME.mkdirs();
-			}
-			File prefsFile = new File(DATA_HOME, "preferences.ser");
-			if (!prefsFile.exists()) {
-				prefsFile.createNewFile();
-				savePreferences(new JFTPPreferences());
-			}
-			fin = new FileInputStream(prefsFile);
-			in = new ObjectInputStream(fin);
-			if (fin.available() != 0) {
-				try {
-					prefs = (JFTPPreferences) in.readObject();
-				} catch (ClassNotFoundException exp) {
-				} catch (ClassCastException exp) {
-				}
-			}
-		} finally {
-			if (in != null) {
-				in.close();
-			}
-			if (fin != null) {
-				fin.close();
-			}
+		if (!DATA_HOME.exists() && !DATA_HOME.mkdirs() && !DATA_HOME.isDirectory()) {
+			throw new IOException("Unable to create JFTP data directory: " + DATA_HOME);
+		}
+		File preferencesFile = new File(DATA_HOME, "preferences.dat");
+		if (preferencesFile.exists() && preferencesFile.length() > 0) {
+			return PreferencesStore.load(DATA_HOME);
+		}
+		File legacyFile = new File(DATA_HOME, "preferences.ser");
+		if (!legacyFile.exists() || legacyFile.length() == 0) {
+			PreferencesStore.save(DATA_HOME, prefs);
 			return prefs;
 		}
+		try (FileInputStream fin = new FileInputStream(legacyFile);
+				ObjectInputStream in = new ObjectInputStream(fin)) {
+			in.setObjectInputFilter(SerializationFilters.jftpFilter());
+			Object loaded = in.readObject();
+			if (loaded instanceof JFTPPreferences) {
+				prefs = (JFTPPreferences) loaded;
+			}
+			PreferencesStore.save(DATA_HOME, prefs);
+		} catch (ClassNotFoundException exp) {
+			throw new IOException("Unsupported preferences format", exp);
+		} catch (ClassCastException exp) {
+			throw new IOException("Invalid preferences format", exp);
+		}
+		return prefs;
 	}
 
 	/**

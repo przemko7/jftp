@@ -20,6 +20,8 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -128,7 +130,11 @@ public class Unzip {
 			throw new IllegalStateException(
 					"ZipFile is not open or is already closed");
 		}
-		zipFile.close();
+		try {
+			zipFile.close();
+		} finally {
+			zipFile = null;
+		}
 	}
 
 	public void unzip() throws IOException {
@@ -138,51 +144,69 @@ public class Unzip {
 		Enumeration entries = zipFile.entries();
 		while (entries.hasMoreElements()) {
 			ZipEntry entry = (ZipEntry) entries.nextElement();
+			Path target = secureTarget(entry);
 			if (entry.isDirectory()) {
-				File dir = new File(targetDirectory, entry.getName());
-				if (!dir.exists()) {
-					dir.mkdirs();
-					dir.setLastModified(entry.getTime());
+				Files.createDirectories(target);
+				if (entry.getTime() >= 0) {
+					Files.setLastModifiedTime(target,
+							java.nio.file.attribute.FileTime.fromMillis(entry.getTime()));
 				}
 			} else {
-				unzipFile(entry);
+				unzipFile(entry, target);
 			}
 		}
 	}
 
-	private void unzipFile(ZipEntry entry) throws IOException {
-		File target = new File(targetDirectory, entry.getName());
-		fireBeginFileEvent(target);
-		File parentDir = target.getParentFile();
-		if (!parentDir.exists()) {
-			parentDir.mkdirs();
+	private Path secureTarget(ZipEntry entry) throws IOException {
+		Path root = targetDirectory.toPath().toRealPath();
+		Path target = root.resolve(entry.getName()).normalize();
+		if (!target.startsWith(root)) {
+			throw new IOException("ZIP entry escapes extraction directory: "
+					+ entry.getName());
 		}
-		BufferedInputStream bin = null;
-		BufferedOutputStream bout = null;
+		Path parent = target.getParent();
+		if (parent != null) {
+			Path current = root;
+			for (Path component : root.relativize(parent)) {
+				current = current.resolve(component);
+				if (Files.isSymbolicLink(current)) {
+					throw new IOException("ZIP entry traverses symbolic link: "
+							+ entry.getName());
+				}
+			}
+		}
+		if (Files.isSymbolicLink(target)) {
+			throw new IOException("ZIP entry targets symbolic link: "
+					+ entry.getName());
+		}
+		return target;
+	}
+
+	private void unzipFile(ZipEntry entry, Path target) throws IOException {
+		fireBeginFileEvent(target.toFile());
+		Path parentDir = target.getParent();
+		if (parentDir != null) {
+			Files.createDirectories(parentDir);
+		}
 		final int bufferSize = 16 * 1024;
 		byte[] buffer = new byte[bufferSize];
 		int bytesRead = 0;
 		long totalBytesRead = 0L;
 
-		try {
-			bin = new BufferedInputStream(zipFile.getInputStream(entry),
-					bufferSize);
-			bout = new BufferedOutputStream(new FileOutputStream(target),
-					bufferSize);
+		try (BufferedInputStream bin = new BufferedInputStream(
+				zipFile.getInputStream(entry), bufferSize);
+				BufferedOutputStream bout = new BufferedOutputStream(
+						new FileOutputStream(target.toFile()), bufferSize)) {
 			while ((bytesRead = bin.read(buffer)) != -1) {
 				bout.write(buffer, 0, bytesRead);
 				totalBytesRead += bytesRead;
-				int progress = (int) ((totalBytesRead * 100) / entry.getSize());
+				int progress = entry.getSize() <= 0 ? 100
+						: (int) Math.min(100,
+								(totalBytesRead * 100) / entry.getSize());
 				fireProgressEvent(progress);
 			}
 		} finally {
-			fireEndFileEvent(file);
-			if (bout != null) {
-				bout.close();
-			}
-			if (bin != null) {
-				bin.close();
-			}
+			fireEndFileEvent(target.toFile());
 		}
 	}
 }

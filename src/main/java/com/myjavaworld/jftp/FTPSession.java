@@ -678,9 +678,8 @@ public class FTPSession extends SessionPanel implements FTPConnectionListener,
 				} catch (Exception exp) {
 					statusWindow.addError("<ERROR> " + exp.getMessage());
 					exp.printStackTrace();
-				} finally {
-					return null;
 				}
+				return null;
 			}
 
 			@Override

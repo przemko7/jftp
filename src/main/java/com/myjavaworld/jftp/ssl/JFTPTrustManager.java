@@ -22,6 +22,9 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
 
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
@@ -75,6 +78,9 @@ public class JFTPTrustManager implements X509TrustManager {
 
 	public void checkServerTrusted(X509Certificate[] chain, String authType)
 			throws CertificateException {
+		if (chain == null || chain.length == 0) {
+			throw new CertificateException("The server returned an empty certificate chain");
+		}
 
 		if (this.chain != null) {
 			if (Arrays.equals(chain, this.chain)) {
@@ -85,6 +91,12 @@ public class JFTPTrustManager implements X509TrustManager {
 		boolean validDate = isValidDate(chain);
 		boolean validHost = isValidHost(chain);
 		boolean trusted = isTrusted(chain);
+		try {
+			tm.checkServerTrusted(chain, authType);
+			trusted = true;
+		} catch (CertificateException exp) {
+			// The certificate manager may allow an explicit user decision below.
+		}
 
 		if (!validDate || !validHost || !trusted) {
 			int userOption = SecurityWarningDlg.showDialog(jftp, chain,
@@ -129,13 +141,42 @@ public class JFTPTrustManager implements X509TrustManager {
 	 */
 	private boolean isValidHost(X509Certificate[] chain) {
 		X509Certificate certificate = chain[0];
+		try {
+			Collection<List<?>> names = certificate.getSubjectAlternativeNames();
+			if (names != null && !names.isEmpty()) {
+				for (List<?> name : names) {
+					if (name.size() >= 2 && (Integer.valueOf(2).equals(name.get(0))
+							|| Integer.valueOf(7).equals(name.get(0)))) {
+						if (matchesHost(String.valueOf(name.get(1)), hostName)) {
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+		} catch (CertificateException exp) {
+			return false;
+		}
 		String subjectDN = certificate.getSubjectDN().getName();
 		DNParser parser = new DNParser(subjectDN);
 		String commonName = parser.getParameter("CN");
 		if (commonName != null) {
-			return commonName.toUpperCase().equals(hostName.toUpperCase());
+			return matchesHost(commonName, hostName);
 		}
 		return false;
+	}
+
+	private boolean matchesHost(String pattern, String host) {
+		if (pattern == null || host == null) {
+			return false;
+		}
+		String expected = host.toLowerCase(Locale.ROOT);
+		String candidate = pattern.toLowerCase(Locale.ROOT);
+		if (candidate.startsWith("*.") && expected.indexOf('.') > 0) {
+			return expected.substring(expected.indexOf('.') + 1)
+					.equals(candidate.substring(2));
+		}
+		return candidate.equals(expected);
 	}
 
 	/**
